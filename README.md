@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/screenshots/banner.png" alt="RePlate banner" width="100%" />
-
 # 🍽️ RePlate
 
 **Turning surplus food into everyday hope.**

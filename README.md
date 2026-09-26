@@ -232,10 +232,6 @@ uv run pytest -q
 
 ---
 
-## 🤝 Contributing
-
-This is a student SWE project. Issues and suggestions are welcome via GitHub Issues / PRs.
-
 ## 📄 License
 
 MIT — see [`LICENSE`](LICENSE) for details.

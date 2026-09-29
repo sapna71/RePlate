@@ -1,71 +1,157 @@
 <div align="center">
 
-# 🍽️ RePlate
+# RePlate
 
-**Turning surplus food into everyday hope.**
+### Food Donation & Redistribution Platform
 
-RePlate connects restaurants, stores, and home cooks with neighbors and shelters nearby — so good food gets eaten, not wasted.
+<p>
+  <strong>Connecting surplus food with people who need it.</strong>
+</p>
 
-[![React](https://img.shields.io/badge/React-18-149eca?style=for-the-badge&logo=react&logoColor=white)](#)
-[![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge&logo=vite&logoColor=white)](#)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white)](#)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql&logoColor=white)](#)
-[![uv](https://img.shields.io/badge/uv-package_manager-DE5FE9?style=for-the-badge)](#)
-[![License](https://img.shields.io/badge/License-MIT-orange?style=for-the-badge)](#)
+<p>
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React">
+  <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/SQLAlchemy-ORM-D71F00?style=for-the-badge" alt="SQLAlchemy">
+  <img src="https://img.shields.io/badge/JWT-Authentication-000000?style=for-the-badge" alt="JWT">
+</p>
+
+<p>
+  <a href="#overview">Overview</a>
+  &nbsp;&bull;&nbsp;
+  <a href="#features">Features</a>
+  &nbsp;&bull;&nbsp;
+  <a href="#architecture">Architecture</a>
+  &nbsp;&bull;&nbsp;
+  <a href="#screenshots">Screenshots</a>
+  &nbsp;&bull;&nbsp;
+  <a href="#setup">Setup</a>
+</p>
 
 </div>
 
 ---
 
-## 📚 Table of Contents
+## Overview
 
-- [Overview](#-overview)
-- [Features](#-features)
-- [Screenshots — Light / Dark](#-screenshots)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [Testing](#-testing)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-- [License](#-license)
+**RePlate** is a full-stack food donation and redistribution platform designed to reduce food wastage by connecting **food donors** with **receivers and organizations** that can make use of surplus food.
 
----
+Instead of relying on informal communication, RePlate provides a structured digital workflow for:
 
-## 🌱 Overview
+* Donating surplus food
+* Discovering available food
+* Submitting food requests
+* Managing donation requests
+* Tracking request status
+* Verifying collection
+* Completing the donation lifecycle
 
-RePlate is a full-stack food-donation platform. Donors (individuals, restaurants, wholesalers) list surplus food; receivers (individuals, organizations, shelters) browse and reserve it nearby — reducing waste and fighting hunger in the same motion.
-
-This repo contains **both halves of the stack**:
-
-| Layer | Location | Status |
-|---|---|---|
-| 🎨 Frontend (React + Vite) | `/src` | ✅ Complete |
-| ⚙️ Backend (FastAPI) | `/backend` | 🚧 In progress (incremental steps) |
+The platform has separate experiences for **Donors** and **Receivers**, while a centralized backend manages authentication, food listings, requests, and database operations.
 
 ---
 
-## ✨ Features
+## The Problem
+
+Large quantities of edible food can go unused while individuals and organizations simultaneously face shortages.
+
+The challenge is not only food availability, but also the lack of a simple mechanism to coordinate:
+
+```mermaid
+flowchart LR
+    A[Surplus Food] --> B[Donor]
+    B --> C[RePlate]
+    C --> D[Available Listings]
+    D --> E[Receiver]
+    E --> F[Food Request]
+    F --> G[Donation Confirmation]
+    G --> H[Collection]
+    H --> I[Completed Donation]
+```
+
+RePlate aims to provide this coordination layer through a centralized web platform.
+
+---
+
+# Core Workflow
+
+```mermaid
+flowchart LR
+    A[Donor] --> B[Create Food Listing]
+    B --> C[Food Becomes Available]
+    C --> D[Receiver Browses Food]
+    D --> E[Receiver Requests Food]
+    E --> F[Donor Reviews Request]
+    F --> G[Request Confirmed]
+    G --> H[Food Collected]
+    H --> I[Donation Completed]
+```
+
+### Donation lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Available
+    Available --> Requested
+    Requested --> Confirmed
+    Confirmed --> Completed
+    Requested --> Available : Request Rejected
+    Completed --> [*]
+```
+
+---
+
+# Features
 
 <table>
 <tr>
-<td width="50%" valign="top">
+<td width="50%">
 
-**For Donors**
-- 📦 List surplus food in seconds
-- 🕒 Set pickup windows before food spoils
-- 🏷️ Individual, organization & wholesaler modes
-- 📊 Dashboard with donation history & impact stats
+### Authentication
+
+* User registration
+* Secure password hashing
+* JWT authentication
+* Protected API routes
+* Current-user dependency
+* Role-based application flow
 
 </td>
-<td width="50%" valign="top">
 
-**For Receivers**
-- 🔎 Find food near you
-- ✅ Reserve & confirm pickups
-- 📜 Full request history
-- 🔔 Status tracking end-to-end
+<td width="50%">
+
+### Donor
+
+* Create food listings
+* Manage donated food
+* View incoming requests
+* Confirm requests
+* Track donation status
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+### Receiver
+
+* Browse available food
+* View food details
+* Submit requests
+* Track requests
+* Monitor request status
+
+</td>
+
+<td>
+
+### Donation Management
+
+* Food availability tracking
+* Request lifecycle
+* Donor confirmation
+* Collection verification
+* Completed donation tracking
 
 </td>
 </tr>
@@ -73,169 +159,606 @@ This repo contains **both halves of the stack**:
 
 ---
 
-## 📸 Screenshots
+# User Roles
 
-RePlate ships with a warm, food-first design system — orange for energy & urgency, warm stone neutrals instead of cold gray, and full light/dark support.
+```mermaid
+flowchart TB
+    R[RePlate Platform]
+
+    R --> D[Donor]
+    R --> V[Receiver]
+
+    D --> D1[Create Food Listing]
+    D --> D2[View Listings]
+    D --> D3[Review Requests]
+    D --> D4[Confirm Donation]
+
+    V --> V1[Browse Food]
+    V --> V2[View Details]
+    V --> V3[Request Food]
+    V --> V4[Track Requests]
+```
+
+---
+
+# Screenshots
+
+> Replace the image paths below with the actual screenshots from the project.
 
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/landing-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/landing-light.png">
-  <img alt="RePlate landing page" src="docs/screenshots/landing-light.png" width="90%">
-</picture>
+<table>
+<tr>
+<td align="center" width="50%">
 
-<sub>👆 GitHub auto-swaps this image based on your OS light/dark setting</sub>
+### Authentication
+
+<img src="./docs/screenshots/login.png" width="100%" alt="RePlate Login">
+
+</td>
+
+<td align="center" width="50%">
+
+### Donor Dashboard
+
+<img src="./docs/screenshots/donor-dashboard.png" width="100%" alt="RePlate Donor Dashboard">
+
+</td>
+</tr>
+
+<tr>
+<td align="center">
+
+### Available Food
+
+<img src="./docs/screenshots/food-listings.png" width="100%" alt="RePlate Food Listings">
+
+</td>
+
+<td align="center">
+
+### Request Tracking
+
+<img src="./docs/screenshots/requests.png" width="100%" alt="RePlate Requests">
+
+</td>
+</tr>
+</table>
 
 </div>
 
-<br>
+---
 
-<details>
-<summary><b>☀️ Light Mode</b> (click to expand)</summary>
-<br>
-<img src="docs/screenshots/landing-light.png" width="100%">
-</details>
+# System Architecture
 
-<details>
-<summary><b>🌙 Dark Mode</b> (click to expand)</summary>
-<br>
-<img src="docs/screenshots/landing-dark.png" width="100%">
-</details>
+```mermaid
+flowchart TB
 
-<details>
-<summary><b>🎨 Design System / Style Guide</b> (click to expand)</summary>
-<br>
-<img src="docs/screenshots/style-guide.png" width="100%">
-</details>
+    U[User]
+
+    subgraph Frontend
+        R[React]
+        V[Vite]
+        T[Tailwind CSS]
+        RT[React Router]
+    end
+
+    subgraph Backend
+        F[FastAPI]
+        AUTH[JWT Authentication]
+        API[REST API]
+        S[Service Layer]
+    end
+
+    subgraph Data Layer
+        SA[SQLAlchemy]
+        AL[Alembic]
+        DB[(PostgreSQL)]
+    end
+
+    U --> R
+    R --> V
+    R --> T
+    R --> RT
+
+    R <-->|HTTP / JSON| F
+
+    F --> AUTH
+    F --> API
+    API --> S
+    S --> SA
+
+    SA --> DB
+    AL --> DB
+```
 
 ---
 
-## 🏗️ Architecture
+# Backend Architecture
+
+The backend follows a layered architecture to keep authentication, business logic, and database operations separated.
 
 ```mermaid
 flowchart LR
-    A[💻 Frontend<br/>React + Vite] -->|HTTP / JSON| B[🌐 API Layer<br/>FastAPI]
-    B --> C[🧭 Router]
-    C --> D[🧠 Service Layer]
-    D --> E[🗄️ Repository Layer]
-    E --> F[🔗 SQLAlchemy ORM]
-    F --> G[(🐘 PostgreSQL)]
 
-    style A fill:#fff7ed,stroke:#ea580c,stroke-width:2px,color:#292524
-    style B fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#292524
-    style C fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#292524
-    style D fill:#fed7aa,stroke:#c2410c,stroke-width:2px,color:#292524
-    style E fill:#fed7aa,stroke:#c2410c,stroke-width:2px,color:#292524
-    style F fill:#fdba74,stroke:#9a3412,stroke-width:2px,color:#292524
-    style G fill:#ea580c,stroke:#9a3412,stroke-width:2px,color:#fff
+    Client[React Client]
+
+    Router[FastAPI Router]
+    Schema[Pydantic Schemas]
+    Service[Service Layer]
+    Model[SQLAlchemy Models]
+    DB[(PostgreSQL)]
+
+    Client --> Router
+    Router --> Schema
+    Router --> Service
+    Service --> Model
+    Model --> DB
 ```
 
-Authentication (JWT) and the food-request flow plug into this same pipeline in later steps — every request still flows **Router → Service → Repository → SQLAlchemy → Postgres**, keeping business logic out of the routes and SQL out of the services.
-
----
-
-## 🧰 Tech Stack
-
-| | |
-|---|---|
-| **Frontend** | React, Vite, TypeScript, Tailwind, Radix UI / shadcn, MUI |
-| **Backend** | FastAPI, Uvicorn |
-| **Database** | PostgreSQL, SQLAlchemy, Alembic |
-| **Auth** | JWT |
-| **Tooling** | `uv` (Python), `npm`/`pnpm` (JS), Pytest |
-
----
-
-## 📁 Project Structure
-
-<details>
-<summary>Click to expand full tree</summary>
+### Request flow
 
 ```text
-replate/
-├── src/                        # Frontend (React + Vite)
-│   ├── app/
-│   │   ├── App.tsx
-│   │   └── components/         # Pages, dashboards, ui/ primitives
-│   └── styles/                 # Theme tokens, fonts, tailwind
+React
+  |
+  | HTTP Request
+  v
+FastAPI Router
+  |
+  v
+Validation
+  |
+  v
+Service / Business Logic
+  |
+  v
+SQLAlchemy
+  |
+  v
+PostgreSQL
+```
+
+---
+
+# Authentication Flow
+
+RePlate uses JWT-based authentication for protected resources.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as FastAPI
+    participant DB as PostgreSQL
+
+    U->>F: Enter credentials
+    F->>A: POST /auth/login
+    A->>DB: Find user
+    DB-->>A: User data
+    A->>A: Verify password
+    A->>A: Generate JWT
+    A-->>F: Access token
+    F->>A: Protected API request
+    A->>A: Validate JWT
+    A-->>F: Protected response
+```
+
+---
+
+# Food Request Flow
+
+```mermaid
+sequenceDiagram
+    participant R as Receiver
+    participant F as Frontend
+    participant A as FastAPI
+    participant DB as PostgreSQL
+    participant D as Donor
+
+    R->>F: Select food listing
+    F->>A: POST /requests
+    A->>DB: Create request
+    DB-->>A: Request created
+    A-->>F: Request confirmation
+
+    D->>F: Open incoming requests
+    F->>A: GET /requests
+    A->>DB: Fetch donor requests
+    DB-->>A: Request data
+    A-->>F: Display requests
+
+    D->>F: Confirm request
+    F->>A: PATCH /requests/{id}
+    A->>DB: Update status
+    DB-->>A: Updated request
+    A-->>F: Updated status
+```
+
+---
+
+# Database Design
+
+```mermaid
+erDiagram
+
+    USERS {
+        uuid id PK
+        string name
+        string email UK
+        string password_hash
+        string category
+        datetime created_at
+    }
+
+    FOOD_LISTINGS {
+        uuid id PK
+        uuid donor_id FK
+        string title
+        string description
+        string quantity
+        string location
+        datetime expiry
+        string status
+        datetime created_at
+    }
+
+    FOOD_REQUESTS {
+        uuid id PK
+        uuid food_id FK
+        uuid receiver_id FK
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    USERS ||--o{ FOOD_LISTINGS : creates
+    USERS ||--o{ FOOD_REQUESTS : submits
+    FOOD_LISTINGS ||--o{ FOOD_REQUESTS : receives
+```
+
+---
+
+# Tech Stack
+
+<div align="center">
+
+|       Layer       |     Technology    |
+| :---------------: | :---------------: |
+|      Frontend     |       React       |
+|     Build Tool    |        Vite       |
+|      Styling      |    Tailwind CSS   |
+|   UI Components   |      Radix UI     |
+|      Backend      |      FastAPI      |
+|      Language     |       Python      |
+|        ORM        |     SQLAlchemy    |
+|     Migrations    |      Alembic      |
+|      Database     |     PostgreSQL    |
+|   Authentication  |        JWT        |
+| API Documentation | OpenAPI / Swagger |
+
+</div>
+
+---
+
+# API Structure
+
+### Authentication
+
+```http
+POST /auth/signup
+POST /auth/login
+POST /auth/forgot-password
+```
+
+### User
+
+```http
+GET /users/me
+```
+
+### Food
+
+```http
+POST /food
+GET /food
+GET /food/{food_id}
+```
+
+### Requests
+
+```http
+POST /requests
+GET /requests
+GET /requests/{request_id}
+PATCH /requests/{request_id}
+```
+
+---
+
+# Project Structure
+
+```text
+RePlate/
 │
-├── backend/                    # Backend (FastAPI)
-│   ├── app/
-│   │   ├── main.py             # App entrypoint + CORS
-│   │   ├── api/                # Routers (e.g. health)
-│   │   ├── core/               # Config / settings
-│   │   ├── db/                 # DB session (upcoming)
-│   │   ├── models/              # SQLAlchemy models (upcoming)
-│   │   ├── schemas/             # Pydantic schemas (upcoming)
-│   │   ├── services/            # Business logic (upcoming)
-│   │   └── repositories/        # Data access layer (upcoming)
-│   ├── tests/
-│   ├── .env.example
-│   └── pyproject.toml
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   ├── routes/
+│   │   │   └── ...
+│   │   │
+│   │   ├── styles/
+│   │   └── ...
+│   │
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.ts
 │
-├── docs/screenshots/            # README visuals
+├── backend/
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── routers/
+│   │   ├── services/
+│   │   ├── dependencies/
+│   │   └── database/
+│   │
+│   ├── alembic/
+│   ├── alembic.ini
+│   └── requirements.txt
+│
+├── docs/
+│   └── screenshots/
+│
 └── README.md
 ```
+
+---
+
+# Interactive Project Details
+
+<details>
+<summary><strong>Authentication</strong></summary>
+
+RePlate uses JWT authentication.
+
+Passwords are hashed before being stored in PostgreSQL. After successful login, the backend generates an access token that is used to authenticate subsequent protected requests.
+
+</details>
+
+<details>
+<summary><strong>Food Listings</strong></summary>
+
+Donors can create listings containing information about the available food, quantity, location, availability, and expiry.
+
+The listing is then exposed to receivers through the food discovery interface.
+
+</details>
+
+<details>
+<summary><strong>Food Requests</strong></summary>
+
+Receivers can request available food. The request is associated with both the receiver and the selected food listing.
+
+The donor can subsequently review and update the request status.
+
+</details>
+
+<details>
+<summary><strong>Database Migrations</strong></summary>
+
+Alembic is used to manage database schema changes.
+
+Example:
+
+```bash
+alembic revision --autogenerate -m "create food listings"
+alembic upgrade head
+```
+
+</details>
+
+<details>
+<summary><strong>API Documentation</strong></summary>
+
+When the backend is running, FastAPI automatically generates interactive API documentation.
+
+```text
+http://localhost:8000/docs
+```
+
+The Swagger interface can be used to inspect endpoints, request schemas, responses, and authenticated routes.
 
 </details>
 
 ---
 
-## 🚀 Getting Started
+# Local Setup
 
-### Frontend
+## Prerequisites
 
-```bash
-npm install
-npm run dev
+```text
+Node.js
+pnpm
+Python 3.12+
+PostgreSQL
+Git
 ```
 
-### Backend
+## Clone
+
+```bash
+git clone <repository-url>
+cd RePlate
+```
+
+## Frontend
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+## Backend
 
 ```bash
 cd backend
-uv sync                 # install dependencies
-cp .env.example .env    # fill in local config
-uv run uvicorn app.main:app --reload
+
+python -m venv .venv
+
+.venv\Scripts\activate
+
+pip install -r requirements.txt
+
+alembic upgrade head
+
+uvicorn app.main:app --reload
 ```
-
-Then visit:
-
-| Endpoint | URL |
-|---|---|
-| Health check | `http://localhost:8000/health` |
-| Swagger docs | `http://localhost:8000/docs` |
-| OpenAPI schema | `http://localhost:8000/openapi.json` |
 
 ---
 
-## 🧪 Testing
+# Environment Variables
+
+Create a `.env` file inside the backend:
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/replate
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+Do not commit `.env` files containing credentials or secrets.
+
+---
+
+# Testing
+
+Backend tests are written to verify API behavior independently from the frontend.
 
 ```bash
-cd backend
-uv run pytest -q
+pytest
+```
+
+Example authentication test:
+
+```python
+def test_signup_success(client):
+    response = client.post(
+        "/auth/signup",
+        json={
+            "name": "Jane Doe",
+            "email": "jane@example.com",
+            "password": "supersecret1",
+        },
+    )
+
+    assert response.status_code == 201
+
+    body = response.json()
+
+    assert body["email"] == "jane@example.com"
+    assert body["name"] == "Jane Doe"
 ```
 
 ---
 
-## 🗺️ Roadmap
+# Development Progress
 
-- [x] **Step 1** — FastAPI project setup, `/health`, CORS, `uv` tooling
-- [ ] **Step 2** — PostgreSQL + SQLAlchemy + Alembic migrations
-- [ ] **Step 3** — User model, signup/login, password hashing
-- [ ] **Step 4** — JWT authentication
-- [ ] **Step 5** — Food listing & request models/APIs
-- [ ] **Step 6** — QR-code pickup confirmation
-- [ ] **Step 7** — Notifications
-- [ ] **Step 8** — Frontend ↔ backend integration
+```mermaid
+flowchart LR
+    A[UI / Figma] --> B[Frontend Setup]
+    B --> C[FastAPI Setup]
+    C --> D[PostgreSQL]
+    D --> E[User Authentication]
+    E --> F[JWT Authorization]
+    F --> G[Food Listings]
+    G --> H[Food Requests]
+    H --> I[Donor Workflow]
+    I --> J[Receiver Workflow]
+    J --> K[Testing]
+```
 
 ---
 
-## 📄 License
+# Project Goals
 
-MIT — see [`LICENSE`](LICENSE) for details.
+RePlate is designed around three primary goals:
+
+<table>
+<tr>
+<td align="center" width="33%">
+
+### Reduce Waste
+
+Create a structured channel for redistributing surplus food.
+
+</td>
+
+<td align="center" width="33%">
+
+### Improve Access
+
+Make available food easier to discover and request.
+
+</td>
+
+<td align="center" width="33%">
+
+### Improve Coordination
+
+Digitize the complete donation lifecycle.
+
+</td>
+</tr>
+</table>
+
+---
+
+# Future Scope
+
+Potential extensions include:
+
+* Location-based food discovery
+* Map integration
+* Organization verification
+* QR-based collection verification
+* Email notifications
+* Push notifications
+* Food expiry reminders
+* Donation analytics
+* Administrative dashboard
+* Deployment using cloud infrastructure
+
+---
+
+# Project Status
 
 <div align="center">
-<sub>Made with 🧡 for people, not landfills.</sub>
+
+| Component              |     Status     |
+| :--------------------- | :------------: |
+| UI / Frontend          | In Development |
+| Authentication         |   Implemented  |
+| JWT Authorization      |   Implemented  |
+| PostgreSQL Integration |   Implemented  |
+| Food Listings          | In Development |
+| Food Requests          | In Development |
+| Donor Workflow         | In Development |
+| Receiver Workflow      | In Development |
+| Testing                | In Development |
+
+</div>
+
+---
+
+<div align="center">
+
+## RePlate
+
+**Good Food. Greater Impact.**
+
 </div>

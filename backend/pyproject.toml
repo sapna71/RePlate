@@ -1,0 +1,29 @@
+[project]
+name = "replate-api"
+version = "0.1.0"
+description = "RePlate backend API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic-settings>=2.5.0",
+    "sqlalchemy>=2.1.1",
+    "alembic>=1.20.0",
+    "psycopg2-binary>=2.9.13",
+    "bcrypt>=5.0.0",
+    "email-validator>=2.3.0",
+    "pyjwt>=2.15.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "httpx>=0.27.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

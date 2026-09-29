@@ -32,7 +32,7 @@
 
 ---
 
-## Overview
+# Overview
 
 **RePlate** is a full-stack food donation and redistribution platform designed to reduce food wastage by connecting **food donors** with **receivers and organizations** that can make use of surplus food.
 
@@ -418,7 +418,7 @@ erDiagram
 
 ---
 
-Tech Stack
+# Tech Stack
 
 <div align="center">
 

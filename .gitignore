@@ -3,3 +3,5 @@ dist/
 .env
 .env.*
 !.env.example
+backend/venv/
+__pycache__/

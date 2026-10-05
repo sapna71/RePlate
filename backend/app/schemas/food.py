@@ -1,10 +1,9 @@
-from datetime import datetime
-from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
-class FoodListingSchema(BaseModel):
-    id: str
+class FoodListingCreate(BaseModel):
     title: str
     description: str
     quantity: str
@@ -13,9 +12,17 @@ class FoodListingSchema(BaseModel):
     location: str
     category: str
     is_urgent: bool = False
-    photos: Optional[str] = None
+    photos: str | None = None
 
 
-class FoodListingResponse(BaseModel):
-    class Config:
-        from_attributes = True
+class FoodListingResponse(FoodListingCreate):
+    id: UUID
+    donor_id: UUID
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+# Kept for compatibility with the existing food_service.py
+FoodListingSchema = FoodListingResponse

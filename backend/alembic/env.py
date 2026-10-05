@@ -10,7 +10,7 @@ from app.db.base import Base
 
 # import model modules here as they're added so Base.metadata
 # picks them up for autogenerate.
-from app.models import user  # noqa: F401
+from app.models import user, food_listing, food_request, notification  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

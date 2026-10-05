@@ -4,14 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.core.config import settings
-
-from app.routers import food, requests
-from app.core.database import Base, engine
-from app.models.food_listing import FoodListing
-from app.models.food_request import FoodRequest
-
-
-Base.metadata.create_all(bind=engine)
+from app.routers.food import router as food_router
+from app.routers.notification import router as notification_router
+from app.routers.requests import router as requests_router
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -25,20 +20,6 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(auth_router)
-
-app.include_router(
-    food.router,
-    prefix="/api/food",
-    tags=["Food Listings"]
-)
-
-app.include_router(
-    requests.router,
-    prefix="/api/requests",
-    tags=["Food Requests"]
-)
-
-
-@app.get("/")
-async def root():
-    return {"message": "Backend is running successfully!"}
+app.include_router(food_router, prefix="/api/food", tags=["Food Listings"])
+app.include_router(requests_router, prefix="/api/requests", tags=["Food Requests"])
+app.include_router(notification_router, prefix="/api/notifications", tags=["Notifications"])

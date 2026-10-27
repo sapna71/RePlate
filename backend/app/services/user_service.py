@@ -52,3 +52,16 @@ def get_user_by_token_subject(db: Session, subject: str) -> User:
     if user is None:
         raise UserNotFoundError()
     return user
+
+def update_user_profile(
+    db: Session,
+    user: User,
+    phone: str | None,
+    address: str | None,
+) -> User:
+    return user_repository.update_profile(
+        db=db,
+        user=user,
+        phone=phone,
+        address=address,
+    )

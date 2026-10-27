@@ -19,6 +19,7 @@ import UserTypeSelectionFooter from './components/UserTypeSelectionFooter';
 import AccountSettings from './components/AccountSettings';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import { getCurrentUser, logoutUser } from '../api';
 
 function BackArrow({ onClick, label = 'Back' }: { onClick: () => void; label?: string }) {
   return (
@@ -58,8 +59,34 @@ export default function App() {
     if (element) element.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleLogin = () => { setIsLoggedIn(true); setCurrentView('userTypeSelection'); };
-  const handleLogout = () => { setIsLoggedIn(false); setUserType(null); setCurrentView('home'); };
+  const handleLogin = async () => {
+  try {
+    const user = await getCurrentUser();
+
+    setUserInfo({
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      category: user.category || 'individual',
+      address: user.address || '',
+      verified: user.is_verified ?? false,
+    });
+
+    setUserCategory(user.category || 'individual');
+    setIsLoggedIn(true);
+    setCurrentView('userTypeSelection');
+  } catch (error) {
+    logoutUser();
+    alert(error instanceof Error ? error.message : 'Unable to load your account.');
+  }
+};
+
+const handleLogout = () => {
+  logoutUser();
+  setIsLoggedIn(false);
+  setUserType(null);
+  setCurrentView('home');
+};
 
   const handleUserTypeSelect = (type: 'donor' | 'receiver') => {
     setUserType(type);

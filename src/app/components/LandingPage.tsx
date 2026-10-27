@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
+import { loginUser, signupUser } from "../../api";
 
 interface LandingPageProps {
   onViewChange: (view: string) => void;
@@ -32,21 +33,42 @@ export default function LandingPage({ onViewChange, onLogin, scrollToSection }: 
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login and redirect to user type selection
-    onLogin();
+
+    try {
+      await loginUser(loginData.email, loginData.password);
+      onLogin();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Login failed");
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate signup and redirect to user type selection
-    onLogin();
+
+    if (loginData.password !== loginData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      await signupUser({
+        name: loginData.name,
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      await loginUser(loginData.email, loginData.password);
+      onLogin();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Signup failed");
+    }
   };
 
   const handleGoogleSignIn = () => {
-    // Simulate Google sign-in and redirect to user type selection
-    onLogin();
+    alert("Google sign-in requires separate Google authentication setup.");
   };
 
   const stats = [

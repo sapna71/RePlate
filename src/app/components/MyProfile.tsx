@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import VerificationPopup from "./VerificationPopup";
+import { getCurrentUser } from "../../api";
 
 interface MyProfileProps {
   userType: 'donor' | 'receiver';
@@ -13,15 +14,54 @@ interface MyProfileProps {
 
 export default function MyProfile({ userType }: MyProfileProps) {
   const [profileData, setProfileData] = React.useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Main Street, San Francisco, CA 94102',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
     category: 'individual' as 'individual' | 'organization' | 'wholesaler',
     organizationName: '',
     businessDetails: '',
     verified: false
   });
+
+  const [loading, setLoading] = React.useState(true);
+  const [profileError, setProfileError] = React.useState('');
+
+  React.useEffect(() => {
+    let active = true;
+
+    async function loadProfile() {
+      try {
+        const user = await getCurrentUser();
+
+        if (!active) return;
+
+        setProfileData(prev => ({
+          ...prev,
+          name: user.name ?? '',
+          email: user.email ?? '',
+          phone: user.phone ?? '',
+          address: user.address ?? '',
+          category: user.category ?? 'individual',
+          verified: user.is_verified ?? false
+        }));
+      } catch (error) {
+        if (active) {
+          setProfileError(
+            error instanceof Error ? error.message : 'Failed to load profile.'
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadProfile();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [showVerificationPopup, setShowVerificationPopup] = React.useState(false);

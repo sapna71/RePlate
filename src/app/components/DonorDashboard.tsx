@@ -15,11 +15,17 @@ import VerificationPopup from "./VerificationPopup";
 import CancellationPopup from "./CancellationPopup";
 import FoodListingEditOverlay from "./FoodListingEditOverlay";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { getFoodListings, createFoodListing, getMyNotifications, createFoodRequest, } from '../../api';
+function isBackendListingId(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
 
 export default function DonorDashboard() {
   const [showForm, setShowForm] = React.useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = React.useState(false);
   const [showNotificationPopup, setShowNotificationPopup] = React.useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
   const [showLocationTracker, setShowLocationTracker] = React.useState(false);
   const [userType, setUserType] = React.useState<'individual' | 'organization' | 'wholesaler'>('individual');
   const [editingListing, setEditingListing] = React.useState<FoodListing | null>(null);
@@ -136,6 +142,127 @@ export default function DonorDashboard() {
     }
   ]);
 
+
+  
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const loadBackendListings = async () => {
+      try {
+        const data = await getFoodListings();
+
+        if (!isMounted || !Array.isArray(data)) return;
+
+        const backendListings: FoodListing[] = data.map((item: any) => ({
+          id: String(item.id),
+          title: item.title,
+          description: item.description,
+          quantity: item.quantity,
+          servings: item.servings,
+          expiryDate: item.expiry_date,
+          location: item.location,
+          distance: '0 miles',
+          donorName: 'RePlate Donor',
+          category: item.category,
+          imageUrl:
+            'https://images.unsplash.com/photo-1748342319942-223b99937d4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHZlZ2V0YWJsZXMlMjBmb29kJTIwbWFya2V0fGVufDF8fHx8MTc1NzA2MjEyMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+          isUrgent: item.is_urgent ?? false,
+          createdAt: item.created_at ?? new Date().toISOString(),
+        }));
+
+        setMyListings(prev => {
+        const existingMocks = prev.filter(
+        listing => !isBackendListingId(listing.id)
+        );
+
+        const existingBackend = prev.filter(
+        listing => isBackendListingId(listing.id)
+       );
+
+        const mergedBackend = new Map(
+        existingBackend.map(listing => [listing.id, listing])
+        );
+
+        backendListings.forEach(listing => {
+        mergedBackend.set(listing.id, listing);
+      }); 
+
+        return [...mergedBackend.values(), ...existingMocks];
+        });
+      } catch (error) {
+        console.error('Could not load backend listings:', error);
+      }
+    };
+
+    loadBackendListings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!notificationsEnabled) return;
+
+    let isMounted = true;
+    let initialized = false;
+    const knownIds = new Set<string>();
+
+    const checkNotifications = async () => {
+      try {
+        const notifications = await getMyNotifications();
+
+        if (!isMounted || !Array.isArray(notifications)) return;
+
+        // Remember existing notifications without displaying old ones.
+        if (!initialized) {
+          notifications.forEach((item: any) => {
+            const id = item.id ?? item.notification_id;
+            if (id != null) knownIds.add(String(id));
+          });
+
+          initialized = true;
+          return;
+        }
+
+        // Display notifications that arrive after polling starts.
+        notifications.forEach((item: any) => {
+          const rawId = item.id ?? item.notification_id;
+
+          if (rawId == null) return;
+
+          const id = String(rawId);
+
+          if (!knownIds.has(id)) {
+            knownIds.add(id);
+
+            if (
+              typeof Notification !== "undefined" &&
+              Notification.permission === "granted"
+            ) {
+              new Notification("RePlate", {
+                body: item.message ?? "You have a new notification.",
+              });
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Could not check notifications:", error);
+      }
+    };
+
+    void checkNotifications();
+
+    const intervalId = window.setInterval(() => {
+      void checkNotifications();
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [notificationsEnabled]);
+
   const handleInputChange = (field: string, value: string | boolean | File[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -171,43 +298,62 @@ export default function DonorDashboard() {
     setShowBarcodeScanner(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Create new listing
-    const newListing: FoodListing = {
-      id: Date.now().toString(),
-      title: formData.title,
-      description: formData.description,
-      quantity: formData.quantity,
-      servings: parseInt(formData.servings) || 1,
-      expiryDate: formData.expiryDate,
-      location: formData.location,
-      distance: '0 miles',
-      donorName: 'Your Business',
-      category: formData.category as any,
-      imageUrl: 'https://images.unsplash.com/photo-1748342319942-223b99937d4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHZlZ2V0YWJsZXMlMjBmb29kJTIwbWFya2V0fGVufDF8fHx8MTc1NzA2MjEyMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      isUrgent: formData.isUrgent,
-      createdAt: new Date().toISOString()
-    };
-    
-    setMyListings(prev => [newListing, ...prev]);
-    setShowForm(false);
-    
-    // Reset form
-    setFormData({
-      title: '',
-      description: '',
-      quantity: '',
-      servings: '',
-      expiryDate: '',
-      category: '',
-      location: '',
-      isUrgent: false,
-      photos: [],
-      barcode: ''
-    });
+
+    try {
+      const createdListing = await createFoodListing({
+        title: formData.title,
+        description: formData.description,
+        quantity: formData.quantity,
+        servings: parseInt(formData.servings, 10) || 1,
+        expiry_date: formData.expiryDate,
+        location: formData.location,
+        category: formData.category,
+        is_urgent: formData.isUrgent,
+      });
+
+      const newListing: FoodListing = {
+        id: String(createdListing.id),
+        title: createdListing.title,
+        description: createdListing.description,
+        quantity: createdListing.quantity,
+        servings: createdListing.servings,
+        expiryDate: createdListing.expiry_date,
+        location: createdListing.location,
+        distance: '0 miles',
+        donorName: 'Your Business',
+        category: createdListing.category,
+        imageUrl:
+          'https://images.unsplash.com/photo-1748342319942-223b99937d4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHZlZ2V0YWJsZXMlMjBmb29kJTIwbWFya2V0fGVufDF8fHx8MTc1NzA2MjEyMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+        isUrgent: createdListing.is_urgent ?? formData.isUrgent,
+        createdAt: createdListing.created_at ?? new Date().toISOString(),
+      };
+
+      setMyListings(prev => [newListing, ...prev]);
+      setShowForm(false);
+
+      setFormData({
+        title: '',
+        description: '',
+        quantity: '',
+        servings: '',
+        expiryDate: '',
+        category: '',
+        location: '',
+        isUrgent: false,
+        photos: [],
+        barcode: '',
+      });
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to create food listing. Please try again.'
+      );
+    }
   };
+
 
   const stats = [
     { icon: <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -809,14 +955,45 @@ export default function DonorDashboard() {
         )}
       </div>
 
+      
       {/* Notification Popup */}
-      <NotificationPopup 
+      
+      <NotificationPopup
         isOpen={showNotificationPopup}
-        onClose={(enableNotifications) => {
+        onClose={async (enableNotifications) => {
           setShowNotificationPopup(false);
-          if (enableNotifications) {
-            // Handle notification permission request
-            console.log('Notifications enabled');
+
+          if (!enableNotifications) {
+            setNotificationsEnabled(false);
+            return;
+          }
+
+          if (typeof Notification === "undefined") {
+            alert("Browser notifications are not supported.");
+            return;
+          }
+
+          try {
+            const permission = await Notification.requestPermission();
+            console.log("Donor notification permission:", permission);
+            if (permission === "granted") {
+              setNotificationsEnabled(true);
+              console.log("Donor notifications enabled:", true);
+
+              new Notification("RePlate Notifications Enabled", {
+                body: "Notification permission enabled successfully.",
+              });
+            } else {
+              setNotificationsEnabled(false);
+              alert("Please allow browser notifications.");
+            }
+          } catch (error) {
+            setNotificationsEnabled(false);
+            alert(
+              error instanceof Error
+                ? error.message
+                : "Failed to enable notifications."
+            );
           }
         }}
       />

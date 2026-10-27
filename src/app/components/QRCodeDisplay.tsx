@@ -11,6 +11,7 @@ interface QRCodeDisplayProps {
   foodTitle: string;
   donorName: string;
   pickupLocation: string;
+  qrCode: string | null;
   queuePosition: number;
 }
 
@@ -22,45 +23,26 @@ export default function QRCodeDisplay({
   foodTitle,
   donorName,
   pickupLocation,
+  qrCode,
   queuePosition
 }: QRCodeDisplayProps) {
   if (!isOpen) return null;
 
-  // Generate QR code data URL
-  const qrCodeData = `FOODSHARE:${requestId}:${verificationCode}`;
   
-  // Create a simple QR code representation (in a real app, use a QR library)
   const QRCodeSVG = () => (
-    <svg viewBox="0 0 200 200" className="w-full h-full">
-      <rect width="200" height="200" fill="white"/>
-      {/* Simplified QR pattern - in production use a real QR library */}
-      <g fill="black">
-        {/* Corner markers */}
-        <rect x="10" y="10" width="50" height="50"/>
-        <rect x="20" y="20" width="30" height="30" fill="white"/>
-        <rect x="140" y="10" width="50" height="50"/>
-        <rect x="150" y="20" width="30" height="30" fill="white"/>
-        <rect x="10" y="140" width="50" height="50"/>
-        <rect x="20" y="150" width="30" height="30" fill="white"/>
-        
-        {/* Data pattern - simplified representation */}
-        {Array.from({ length: 15 }, (_, i) => (
-          Array.from({ length: 15 }, (_, j) => {
-            const shouldFill = (i + j + parseInt(verificationCode)) % 3 === 0;
-            return shouldFill ? (
-              <rect 
-                key={`${i}-${j}`}
-                x={70 + j * 8} 
-                y={70 + i * 8} 
-                width="6" 
-                height="6"
-              />
-            ) : null;
-          })
-        ))}
-      </g>
-    </svg>
+    qrCode ? (
+      <img
+        src={qrCode}
+        alt="Pickup verification QR code"
+        className="w-full h-full object-contain"
+      />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">
+        QR code unavailable
+      </div>
+    )
   );
+
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4">

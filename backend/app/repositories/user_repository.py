@@ -29,3 +29,17 @@ def create(db: Session, user_in: UserCreate, hashed_password: str) -> User:
     db.commit()
     db.refresh(user)
     return user
+
+def update_profile(
+    db: Session,
+    user: User,
+    phone: str | None,
+    address: str | None,
+) -> User:
+    user.phone = phone
+    user.address = address
+
+    db.commit()
+    db.refresh(user)
+
+    return user

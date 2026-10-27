@@ -15,6 +15,7 @@ import BookingConfirmationDialog from "./BookingConfirmationDialog";
 import SMSNotificationPopup from "./SMSNotificationPopup";
 import QRCodeDisplay from "./QRCodeDisplay";
 import CancellationConfirmedPopup from "./CancellationConfirmedPopup";
+import { createFoodRequest, getFoodListings, getRequestQR, getMyNotifications  } from '../../api';
 
 interface Request {
   id: string;
@@ -50,6 +51,7 @@ export default function ReceiverDashboard() {
   const [selectedQRRequest, setSelectedQRRequest] = React.useState<Request | null>(null);
   const [showCancellationConfirmed, setShowCancellationConfirmed] = React.useState(false);
   const [cancelledFoodTitle, setCancelledFoodTitle] = React.useState('');
+  const [backendQrCode, setBackendQrCode] = React.useState<string | null>(null);
 
   // Update time every second for real-time countdown
   React.useEffect(() => {
@@ -127,7 +129,7 @@ export default function ReceiverDashboard() {
   });
 
   // Mock data for available listings
-  const [availableListings] = React.useState<FoodListing[]>([
+  const [availableListings, setAvailableListings] = React.useState<FoodListing[]>([
     {
       id: '1',
       title: 'Fresh Vegetable Surplus',
@@ -204,6 +206,51 @@ export default function ReceiverDashboard() {
       createdAt: '2025-01-05T14:20:00Z'
     }
   ]);
+  
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const loadBackendListings = async () => {
+      try {
+        const data = await getFoodListings();
+
+        if (!isMounted || !Array.isArray(data)) return;
+
+        const backendListings: FoodListing[] = data.map((item: any) => ({
+          id: String(item.id),
+          title: item.title,
+          description: item.description,
+          quantity: item.quantity,
+          servings: item.servings,
+          expiryDate: item.expiry_date,
+          location: item.location,
+          distance: '0 km',
+          donorName: 'RePlate Donor',
+          category: item.category,
+          imageUrl:
+            'https://images.unsplash.com/photo-1748342319942-223b99937d4e?auto=format&fit=crop&w=1080&q=80',
+          isUrgent: item.is_urgent ?? false,
+          createdAt: item.created_at ?? new Date().toISOString(),
+        }));
+
+        setAvailableListings(prev => {
+          const mockListings = prev.filter(
+            listing => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(listing.id)
+          );
+
+          return [...backendListings, ...mockListings];
+        });
+      } catch (error) {
+        console.error('Could not load backend food listings:', error);
+      }
+    };
+
+    loadBackendListings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const formatTimeRemaining = (deadline: Date) => {
     const diff = deadline.getTime() - currentTime.getTime();
@@ -290,21 +337,33 @@ export default function ReceiverDashboard() {
     setShowBookingConfirmation(true);
   };
 
-  const handleConfirmBooking = () => {
-    // Hide booking confirmation dialog
-    setShowBookingConfirmation(false);
-    
-    // Hide the request overlay
-    setRequestingListing(null);
-    
-    // Add the request to myRequests
-    if (pendingRequest) {
-      setMyRequests(prev => [...prev, pendingRequest]);
-      
-      // Show SMS notification
+  
+  const handleConfirmBooking = async () => {
+    if (!pendingRequest) return;
+
+    try {
+      const response = await createFoodRequest(pendingRequest.listingId);
+
+      const savedRequest: Request = {
+        ...pendingRequest,
+        id: String(response.request_id),
+        position: response.queue_number,
+      };
+
+      setMyRequests(prev => [...prev, savedRequest]);
+      setShowBookingConfirmation(false);
+      setRequestingListing(null);
+      setPendingRequest(savedRequest);
       setShowSMSNotification(true);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to submit food request. Please try again.'
+      );
     }
   };
+
 
   const handleCancelBooking = () => {
     setShowBookingConfirmation(false);
@@ -315,10 +374,34 @@ export default function ReceiverDashboard() {
     setPendingRequest(null);
   };
 
-  const handleShowQRCode = (request: Request) => {
-    setSelectedQRRequest(request);
-    setShowQRCode(true);
+  
+  const handleShowQRCode = async (request: Request) => {
+    try {
+      // Backend-created requests have UUID food listing IDs.
+      const isBackendRequest =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          request.listingId
+        );
+
+      if (!isBackendRequest) {
+        alert("This is a demo listing. Please use a listing loaded from the backend.");
+        return;
+      }
+
+      const response = await getRequestQR(request.id);
+
+      setSelectedQRRequest(request);
+      setBackendQrCode(response.qr_code);
+      setShowQRCode(true);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not load the QR code. Please try again."
+      );
+    }
   };
+
 
   const handleCancelRequest = (requestId: string) => {
     const request = myRequests.find(r => r.id === requestId);
@@ -725,12 +808,31 @@ export default function ReceiverDashboard() {
       {/* Notification Popup */}
       <NotificationPopup 
         isOpen={showNotificationPopup}
-        onClose={(enableNotifications) => {
+        onClose={async (enableNotifications) => {
           setShowNotificationPopup(false);
+
           if (enableNotifications) {
-            console.log('Notifications enabled for receiver');
+            try {
+              const permission = await Notification.requestPermission();
+
+              if (permission === "granted") {
+                await getMyNotifications();
+                new Notification("RePlate Notifications Enabled", {
+                  body: "Notification permission enabled successfully.",
+                });
+              } else {
+                alert("Please allow browser notifications.");
+              }
+            } catch (error) {
+              alert(
+                error instanceof Error
+                  ? error.message
+                  : "Failed to fetch notifications."
+              );
+            }
           }
         }}
+
       />
 
       {/* Location Tracker */}
@@ -813,6 +915,7 @@ export default function ReceiverDashboard() {
           foodTitle={availableListings.find(l => l.id === selectedQRRequest.listingId)?.title || ''}
           donorName={availableListings.find(l => l.id === selectedQRRequest.listingId)?.donorName || ''}
           pickupLocation={availableListings.find(l => l.id === selectedQRRequest.listingId)?.location || ''}
+          qrCode={backendQrCode}
           queuePosition={selectedQRRequest.position}
         />
       )}
